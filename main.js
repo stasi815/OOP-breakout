@@ -290,7 +290,7 @@ class BreakoutGame {
   mouseMoveHandler(e) {
     const relativeX = e.clientX - canvas.offsetLeft;
     if (relativeX > 0 && relativeX < canvasWidth) {
-      this.paddle.moveTo(relativeX - this.paddle.width / 2, this.paddleYStart);
+      this.paddle.moveTo(relativeX - this.paddle.width / 2, paddleYStart);
     }
   }
 
