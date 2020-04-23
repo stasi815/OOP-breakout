@@ -1,18 +1,4 @@
-/* ***************************************************************
-
-Challenge 1 - Make Constants
-
-Challenge 2 - Identify duplicate code
-** This block of code is repeated better to make a function for this.
-
-Challenge 3 - Use Subroutines
-*** This block of code would be better as a function.
-
-Challenge 4 - Encapsulating code
-**** Use objects to encapsulate code
-
-***************************************************************** */
-
+/* eslint-disable max-classes-per-file */
 // **************************************************************
 // DOM references
 // **************************************************************
@@ -45,245 +31,291 @@ const canvasHeight = 320;
 const startPositionX = canvasWidth / 2;
 const startPositionY = canvasHeight - 30;
 const paddleXStart = (canvasWidth - paddleWidth) / 2;
+const paddleYStart = canvasHeight - paddleHeight;
 const twoPI = Math.PI * 2;
 const winAlert = 'YOU WIN, CONGRATULATIONS!';
 const gameOver = 'GAME OVER';
 
-// --------------------------------------------------------------
-// Variables
-// --------------------------------------------------------------
+// Object Classes, move global variables to objects
 
-let paddleX;
+class Ball {
+  constructor(x = 0, y = 0, dx = 2, dy = -2, radius = 10, color = 'blue') {
+    this.x = x;
+    this.y = y;
+    this.dx = dx;
+    this.dy = dy;
+    this.radius = radius;
+    this.color = color;
+  }
 
-// Objects (ball)
-// eslint-disable-next-line prefer-const
-let ball = {
-  x: 0, // ball.x
-  y: 0, // ball.y
-  dx: 0, // ball.dx
-  dy: 0, // ball.dy
-  radius: ballRadius,
-};
+  move() {
+    this.x += this.dx;
+    this.y += this.dy;
+  }
 
-// eslint-disable-next-line no-use-before-define
-resetBallAndPaddle();
-
-let score = 0;
-let lives = 3;
-
-let rightPressed = false;
-let leftPressed = false;
-
-// --------------------------------------------------------------
-// Setup Bricks Array
-// --------------------------------------------------------------
-
-const bricks = [];
-
-// eslint-disable-next-line no-use-before-define
-initializeBricks();
-
-// **************************************************************
-// Functions
-// **************************************************************
-
-function drawBall() {
-  ctx.beginPath();
-  // * Math.PI * 2 could be a constant
-  ctx.arc(ball.x, ball.y, ball.radius, 0, twoPI);
-  ctx.fillStyle = objectColor;
-  ctx.fill();
-  ctx.closePath();
-}
-
-function drawPaddle() {
-  ctx.beginPath();
-  ctx.rect(paddleX, canvasHeight - paddleHeight, paddleWidth, paddleHeight);
-  ctx.fillStyle = objectColor;
-  ctx.fill();
-  ctx.closePath();
-}
-
-function initializeBricks() {
-  for (let c = 0; c < brickColumnCount; c += 1) {
-    bricks[c] = [];
-    for (let r = 0; r < brickRowCount; r += 1) {
-      bricks[c][r] = {
-        x: 0,
-        y: 0,
-        status: 1,
-      };
-    }
+  render(ctx) {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, twoPI);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+    ctx.closePath();
   }
 }
 
-function drawBricks() {
-  for (let c = 0; c < brickColumnCount; c += 1) {
-    for (let r = 0; r < brickRowCount; r += 1) {
-      if (bricks[c][r].status === 1) {
-        // **** This block should really be part of the brick initialization
+
+class Brick {
+  constructor(x, y, width, height, color = 'blue') {
+    this.x = x;
+    this.y = y;
+    this.status = 1;
+    this.width = width;
+    this.height = height;
+    this.color = color;
+  }
+
+  // eslint-disable-next-line no-shadow
+  render(ctx) {
+    ctx.beginPath();
+    ctx.rect(this.x, this.y, this.width, this.height);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+    ctx.closePath();
+  }
+}
+
+// owns bricks array, brick init, draw bricks
+class Bricks {
+  constructor(cols, rows) {
+    this.cols = cols;
+    this.rows = rows;
+    this.bricks = [];
+    this.init();
+  }
+
+  init() {
+    for (let c = 0; c < this.cols; c += 1) {
+      this.bricks[c] = [];
+      for (let r = 0; r < this.rows; r += 1) {
         const brickX = (c * (brickWidth + brickPadding)) + brickOffsetLeft;
         const brickY = (r * (brickHeight + brickPadding)) + brickOffsetTop;
-        bricks[c][r].x = brickX;
-        bricks[c][r].y = brickY;
 
-        ctx.beginPath();
-        ctx.rect(brickX, brickY, brickWidth, brickHeight);
-        ctx.fillStyle = objectColor;
-        ctx.fill();
-        ctx.closePath();
+        this.bricks[c][r] = new Brick(brickX, brickY, brickWidth, brickHeight, objectColor);
       }
     }
   }
-}
 
-function collisionDetection() {
-  for (let c = 0; c < brickColumnCount; c += 1) {
-    for (let r = 0; r < brickRowCount; r += 1) {
-      const brick = bricks[c][r];
-      if (brick.status === 1) {
-        // eslint-disable-next-line max-len
-        if (ball.x > brick.x && ball.x < brick.x + brickWidth && ball.y > brick.y && ball.y < brick.y + brickHeight) {
-          ball.dy = -ball.dy;
-          brick.status = 0;
-          score += 1;
-          if (score === brickRowCount * brickColumnCount) {
-            // eslint-disable-next-line no-alert
-            alert(winAlert);
-            document.location.reload();
-          }
+  render(ctx) {
+    for (let c = 0; c < this.cols; c += 1) {
+      for (let r = 0; r < this.rows; r += 1) {
+        const brick = this.bricks[c][r];
+        if (brick.status === 1) {
+          brick.render(ctx);
         }
       }
     }
   }
 }
 
-function drawScore() {
-  ctx.font = gameFont;
-  ctx.fillStyle = objectColor;
-  ctx.fillText(`Score: ${score}`, 8, 20);
-}
-
-function drawLives() {
-  ctx.font = gameFont;
-  ctx.fillStyle = objectColor;
-  ctx.fillText(`Lives: ${lives}`, canvasWidth - 65, 20);
-}
-
-function resetBallAndPaddle() {
-  ball.x = startPositionX;
-  ball.y = startPositionY;
-  ball.dx = 2;
-  ball.dy = -2;
-  paddleX = paddleXStart;
-}
-
-function moveBall() {
-  ball.x += ball.dx;
-  ball.y += ball.dy;
-}
-
-function collisionsWithCanvasAndPaddle() {
-  // Bounce the ball off the left and right of the canvas
-  if (ball.x + ball.dx > canvasWidth - ball.radius || ball.x + ball.dx < ball.radius) {
-    ball.dx = -ball.dx;
+class Paddle {
+  constructor(x, y, width, height, color = 'red') {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.color = color;
   }
 
-  // Bounce the ball off the top, paddle, or hit the bottom of the canvas
-  if (ball.y + ball.dy < ball.radius) {
-    // hit the top
-    ball.dy = -ball.dy;
-  } else if (ball.y + ball.dy > canvasHeight - ball.radius) {
-    // hit the bottom
-    if (ball.x > paddleX && ball.x < paddleX + paddleWidth) {
-      // Hit the paddle
-      ball.dy = -ball.dy;
-    } else {
-      // Lose a life
-      lives -= 1;
-      if (!lives) {
-        // Game Over
-        // eslint-disable-next-line no-alert
-        alert(gameOver);
-        ball.x = 200;
-        ball.y = 200;
-        document.location.reload();
-      } else {
-        // Start the over you hit the bottom
-        resetBallAndPaddle();
+  moveBy(dx, dy) {
+    this.x += dx;
+    this.y += dy;
+  }
+
+  moveTo(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+
+  render(ctx) {
+    ctx.beginPath();
+    ctx.rect(this.x, this.y, this.width, this.height);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+    ctx.closePath();
+  }
+}
+
+
+// Score & Lives
+
+class GameLabel {
+  constructor(text, x, y, color, font = gameFont) {
+    this.text = text;
+    this.x = x;
+    this.y = y;
+    this.color = color;
+    this.value = 0;
+    this.font = font;
+  }
+
+  render(ctx) {
+    ctx.font = this.font;
+    ctx.fillStyle = this.color;
+    ctx.fillText(`${this.text}: ${this.value}`, this.x, this.y);
+  }
+}
+
+class BreakoutGame {
+  constructor() {
+    this.ball = new Ball(0, 2, -2, ballRadius);
+    this.paddle = new Paddle(paddleXStart, paddleYStart, paddleWidth, paddleHeight);
+    this.bricks = new Bricks(brickColumnCount, brickRowCount);
+    this.scoreLabel = new GameLabel('Score', 8, 20);
+    this.livesLabel = new GameLabel('Lives', canvasWidth - 65, 20);
+
+    this.rightPressed = false;
+    this.leftPressed = false;
+
+    this.setup();
+    this.draw();
+  }
+
+  setup() {
+    this.livesLabel.value = 3;
+    // eslint-disable-next-line no-use-before-define
+    this.resetBallAndPaddle();
+    // Register Events
+
+
+    document.addEventListener('keydown', (e) => {
+      this.keyDownHandler(e);
+    }, false);
+    document.addEventListener('keyup', (e) => {
+      this.keyUpHandler(e);
+    }, false);
+    document.addEventListener('mousemove', (e) => {
+      this.mouseMoveHandler(e);
+    }, false);
+  }
+
+  resetBallAndPaddle() {
+    this.ball.x = startPositionX;
+    this.ball.y = startPositionY;
+    this.ball.dx = 2;
+    this.ball.dy = -2;
+    this.paddle.x = paddleXStart;
+  }
+
+  collisionDetection() {
+    for (let c = 0; c < this.bricks.cols; c += 1) {
+      for (let r = 0; r < this.bricks.rows; r += 1) {
+        const brick = this.bricks.bricks[c][r];
+        if (brick.status === 1) {
+          // eslint-disable-next-line max-len
+          if (this.ball.x > brick.x && this.ball.x < brick.x + brickWidth && this.ball.y > brick.y && this.ball.y < brick.y + brickHeight) {
+            this.ball.dy = -this.ball.dy;
+            brick.status = 0;
+            this.scoreLabel.value += 1;
+            if (this.scoreLabel.value === this.bricks.rows * this.bricks.cols) {
+              // eslint-disable-next-line no-alert
+              alert(winAlert);
+              document.location.reload();
+            }
+          }
+        }
       }
     }
   }
-}
 
-function movePaddle() {
-  if (rightPressed && paddleX < canvasWidth - paddleWidth) {
-    paddleX += 7;
-  } else if (leftPressed && paddleX > 0) {
-    paddleX -= 7;
+  movePaddle() {
+    if (this.rightPressed && this.paddle.x < canvasWidth - this.paddle.width) {
+      this.paddle.moveBy(7, 0);
+    } else if (this.leftPressed && this.paddle.x > 0) {
+      this.paddle.moveBy(-7, 0);
+    }
+  }
+
+  collisionsWithCanvasAndPaddle() {
+    // Bounce the ball off the left and right of the canvas
+    // eslint-disable-next-line max-len
+    if (this.ball.x + this.ball.dx > canvasWidth - this.ball.radius || this.ball.x + this.ball.dx < this.ball.radius) {
+      this.ball.dx = -this.ball.dx;
+    }
+    // Bounce the this.ball off the top, paddle, or hit the bottom of the canvas
+    if (this.ball.y + this.ball.dy < this.ball.radius) {
+      // hit the top
+      this.ball.dy = -this.ball.dy;
+    } else if (this.ball.y + this.ball.dy > canvasHeight - this.ball.radius) {
+      // hit the bottom
+      if (this.ball.x > this.paddle.x && this.ball.x < this.paddle.x + this.paddle.width) {
+        // Hit the paddle
+        this.ball.dy = -this.ball.dy;
+      } else {
+        // Lose a life
+        this.livesLabel.value -= 1;
+        if (this.livesLabel.value < 1) {
+          // Game Over
+          // eslint-disable-next-line no-alert
+          alert(gameOver);
+          this.ball.x = 200;
+          this.ball.y = 200;
+          document.location.reload();
+        } else {
+          // Start the over you hit the bottom
+          this.resetBallAndPaddle();
+        }
+      }
+    }
+  }
+
+  //--------------------------------------------------------------
+  // Event Listeners
+  // --------------------------------------------------------------
+
+  keyDownHandler(e) {
+    if (e.keyCode === 39) {
+      this.rightPressed = true;
+    } else if (e.keyCode === 37) {
+      this.leftPressed = true;
+    }
+  }
+
+  keyUpHandler(e) {
+    if (e.keyCode === 39) {
+      this.rightPressed = false;
+    } else if (e.keyCode === 37) {
+      this.leftPressed = false;
+    }
+  }
+
+  mouseMoveHandler(e) {
+    const relativeX = e.clientX - canvas.offsetLeft;
+    if (relativeX > 0 && relativeX < canvasWidth) {
+      this.paddle.moveTo(relativeX - this.paddle.width / 2, this.paddleYStart);
+    }
+  }
+
+  draw() {
+    // Clear the canvas
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    this.bricks.render(ctx);
+    this.ball.render(ctx);
+    this.paddle.render(ctx);
+    this.scoreLabel.render(ctx);
+    this.livesLabel.render(ctx);
+    this.collisionDetection();
+    this.ball.move();
+    this.movePaddle();
+    this.collisionsWithCanvasAndPaddle();
+
+    // Draw the screen again
+    requestAnimationFrame(() => {
+      this.draw();
+    });
   }
 }
 
-// --------------------------------------------------------------
-// Game Loop
-// --------------------------------------------------------------
-
-function draw() {
-  // Clear the canvas
-  ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-  // Call helper functions
-  drawBricks();
-  drawBall();
-  drawPaddle();
-  drawScore();
-  drawLives();
-  collisionDetection();
-  moveBall();
-  movePaddle();
-  collisionsWithCanvasAndPaddle();
-
-  // Draw the screen again
-  requestAnimationFrame(draw);
-}
-
-// --------------------------------------------------------------
-// Event Listeners
-// --------------------------------------------------------------
-
-function keyDownHandler(e) {
-  if (e.keyCode === 39) {
-    rightPressed = true;
-  } else if (e.keyCode === 37) {
-    leftPressed = true;
-  }
-}
-
-function keyUpHandler(e) {
-  if (e.keyCode === 39) {
-    rightPressed = false;
-  } else if (e.keyCode === 37) {
-    leftPressed = false;
-  }
-}
-
-function mouseMoveHandler(e) {
-  const relativeX = e.clientX - canvas.offsetLeft;
-  if (relativeX > 0 && relativeX < canvasWidth) {
-    paddleX = relativeX - paddleWidth / 2;
-  }
-}
-
-// **************************************************************
-// Register Events
-// **************************************************************
-
-document.addEventListener('keydown', keyDownHandler, false);
-document.addEventListener('keyup', keyUpHandler, false);
-document.addEventListener('mousemove', mouseMoveHandler, false);
-
+const game = new BreakoutGame();
 
 // **************************************************************
 // Starts program entry point
 // **************************************************************
-
-draw();
