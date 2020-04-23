@@ -36,7 +36,7 @@ const twoPI = Math.PI * 2;
 const winAlert = 'YOU WIN, CONGRATULATIONS!';
 const gameOver = 'GAME OVER';
 
-// Object Classes, move global variables to objects
+// Object Classes
 
 class Ball {
   constructor(x = 0, y = 0, dx = 2, dy = -2, radius = 10, color = 'blue') {
