@@ -1,8 +1,15 @@
-// --------------------------------
+
+// -------------------------
 
 // Game
 
-// --------------------------------
+// -------------------------
+
+import Ball from './ball';
+import Bricks from './bricks';
+import Sprite from './sprite';
+import GameLabel from './gamelabel';
+
 
 class BreakoutGame {
   constructor(canvasId) {
@@ -19,7 +26,7 @@ class BreakoutGame {
     this.brickPadding = 10;
     this.brickOffsetTop = 30;
     this.brickOffsetLeft = 30;
-    this.objectColor = '#0095DD';
+    this.color = '#0095DD';
     this.gameFont ='16px Arial';
     this.canvasWidth = 480;
     this.canvasHeight = 320;
@@ -30,12 +37,8 @@ class BreakoutGame {
     this.winAlert = 'YOU WIN, CONGRATULATIONS!';
     this.gameOver = 'GAME OVER';
 
-
-
-
     this.ball = new Ball(0, 2, -2, this.ballRadius);
-    this.paddle = new Paddle(this.paddleXStart, this.paddleYStart, this.paddleWidth, this.paddleHeight);
-    this.bricks = new Bricks(this.brickColumnCount, this.brickRowCount);
+    this.paddle = new Sprite(this.paddleXStart, this.paddleYStart, this.paddleWidth, this.paddleHeight);
 
     this.bricks = new Bricks({
       cols: this.brickColumnCount,
@@ -45,10 +48,11 @@ class BreakoutGame {
       padding: this.brickPadding,
       offsetLeft: this.brickOffsetLeft,
       offsetTop: this.brickOffsetTop,
-      color: this.objectColor,
-    })
-    this.scoreLabel = new GameLabel('Score', 8, 20);
-    this.livesLabel = new GameLabel('Lives', this.canvasWidth - 65, 20);
+      color: this.color,
+    });
+
+    this.scoreLabel = new GameLabel('Score', 8, 20, this.color);
+    this.livesLabel = new GameLabel('Lives', this.canvasWidth - 65, 20, this.color);
 
     this.rightPressed = false;
     this.leftPressed = false;
@@ -176,6 +180,7 @@ class BreakoutGame {
     // Clear the canvas
     this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
     this.bricks.render(this.ctx);
+    console.log(this.bricks);
     this.ball.render(this.ctx);
     this.paddle.render(this.ctx);
     this.scoreLabel.render(this.ctx);
@@ -191,3 +196,5 @@ class BreakoutGame {
     });
   }
 }
+
+export default BreakoutGame;
